@@ -37,107 +37,180 @@ class RedisStoreTest extends \Tests\TestCase
         ]);
     }
 
-    // /**
-    //  * @test
-    //  * @group Integration
-    //  */
-    // public function it_prefixes_its_storage_keys()
-    // {
-    //     Store::set('my-key', 'my-value');
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_prefixes_its_storage_keys()
+    {
+        $redis = resolve(RedisManager::class);
 
-    //     $this->assertEquals('my-value', Redis::get(Store::$prefix . 'my-key'));
-    // }
+        $store = new RedisStore($redis);
 
-    // /**
-    //  * @test
-    //  * @group Integration
-    //  */
-    // public function it_can_dynamically_call_redis_functions()
-    // {
-    //     Store::set('my-key', 10);
+        $store->set('foo', ['foo' => 1]);
 
-    //     Store::incr('my-key');
+        $keys = Redis::keys('*');
 
-    //     $this->assertEquals(11, Store::get('my-key'));
-    // }
+        $key = array_shift($keys);
 
-    // /**
-    //  * @test
-    //  * @group Integration
-    //  */
-    // public function it_can_set_and_get_complex_values()
-    // {
-    //     Store::encodeSet('my-key', [
-    //         'foo' => 'bar',
-    //         'bar' => 'foo',
-    //     ]);
+        $this->assertEquals('ej:quantify:foo', $key);
 
-    //     $this->assertEquals(Store::encodeGet('my-key'), [
-    //         'foo' => 'bar',
-    //         'bar' => 'foo',
-    //     ]);
-    // }
+        $store->setBucket('my-bucket');
 
-    // /**
-    //  * @test
-    //  * @group Integration
-    //  */
-    // public function it_can_get_all_stored_items()
-    // {
-    //     Store::set('birds:seagulls', 22);
-    //     Store::set('birds:magpies', 11);
-    //     Store::set('birds:peewee', 13);
-    //     Store::set('mamals:whales', 5);
-    //     Store::set('mamals:dogs', 533);
-    //     Store::set('mamals:mice', 5933);
+        $store->set('bar', ['bar' => 1]);
 
-    //     $this->assertArraySubset(Store::all(), [
-    //         'birds' => [
-    //             'seagulls' => "22",
-    //             'magpies' => "11",
-    //             'peewee' => "13",
-    //         ],
-    //         'mamals' => [
-    //             'whales' => "5",
-    //             'dogs' => "533",
-    //             'mice' => "5933",
-    //         ],
-    //     ]);
-    // }
+        $keys = Redis::keys('*');
 
-    // /**
-    //  * @test
-    //  * @group Integration
-    //  */
-    // public function it_can_get_all_stored_items_without_namespaces()
-    // {
-    //     Store::set('birds', 22);
-    //     Store::set('birds', 11);
-    //     Store::set('birds', 13);
-    //     Store::set('mamals', 5);
-    //     Store::set('mamals', 533);
-    //     Store::set('mamals', 5933);
+        $key = array_pop($keys);        
 
-    //     $this->assertArraySubset(Store::all(), [
-    //         'birds' => 13,
-    //         'mamals' => 5933,
-    //     ]);
-    // }
+        $this->assertEquals('ej:quantify:my-bucket:bar', $key);
+    }
 
-    // /**
-    //  * @test
-    //  * @group Integration
-    //  */
-    // public function it_can_remove_all_keys()
-    // {
-    //     Store::set('my-key-01', 'value-01');
-    //     Store::set('my-key-02', 'value-02');
-    //     Store::set('my-key-03', 'value-03');
-    //     Store::set('my-key-04', 'value-04');
-    //     Store::set('my-key-05', 'value-05');
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_can_update_values()
+    {
+        $redis = resolve(RedisManager::class);
 
-    //     Store::flush();
+        $store = new RedisStore($redis);
 
-    //     $this->assertEmpty(Store::all());
-    // }
+        $store->set('my-key', [
+            'foo' => 'bar',
+            'bar' => 'foo',
+        ]);
+
+        $store->update('my-key', [
+            'foo' => 'foo',
+            'big' => 'small',
+        ]);        
+
+        $this->assertEquals($store->get('my-key'), [
+            'foo' => 'foo',
+            'bar' => 'foo',
+            'big' => 'small',
+        ]);
+    }
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_can_check_keys_existence()
+    {
+        $redis = resolve(RedisManager::class);
+
+        $store = new RedisStore($redis);
+
+        $store->set('my-key', [
+            'foo' => 'bar',
+            'bar' => 'foo',
+        ]);
+
+        $this->assertTrue($store->has('my-key'));        
+
+        $this->assertFalse($store->has('your-key')); 
+    }    
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_can_return_all_items_in_a_bucket()
+    {
+        $redis = resolve(RedisManager::class);
+
+        $store = new RedisStore($redis);
+
+        $store->setBucket('life');
+
+        $store->set('mamals', [
+            'whales'    => 14,
+            'dogs'      => 292,
+            'mice'      => 2212,
+        ]);
+
+        $store->set('birds', [
+            'seagulls'  => 22,
+            'magpies'   => 11,
+            'peewee'    => 13,
+        ]);      
+
+        $store->setBucket('universe');   
+
+        $store->set('planets', [
+            'earth'     => 3,
+            'venus'     => 2,
+            'jupiter'   => 5,
+        ]);                
+
+        $this->assertArraySubset($store->all(), [
+            [
+                'earth'     => 3,
+                'venus'     => 2,
+                'jupiter'   => 5,
+            ]            
+        ]);
+
+        $store->setBucket('life');
+
+        $this->assertArraySubset($store->all(), [
+            [
+                'seagulls'  => 22,
+                'magpies'   => 11,
+                'peewee'    => 13,
+            ],              
+            [
+                'whales'    => 14,
+                'dogs'      => 292,
+                'mice'      => 2212,
+            ],                 
+        ]);        
+    }    
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_can_remove_all_keys()
+    {
+        $redis = resolve(RedisManager::class);
+
+        $store = new RedisStore($redis);
+
+        $store->setBucket('life');
+
+        $store->set('mamals', [
+            'whales'    => 14,
+            'dogs'      => 292,
+            'mice'      => 2212,
+        ]);
+
+        $store->set('birds', [
+            'seagulls'  => 22,
+            'magpies'   => 11,
+            'peewee'    => 13,
+        ]);      
+
+        $store->setBucket('universe');   
+
+        $store->set('planets', [
+            'earth'     => 3,
+            'venus'     => 2,
+            'jupiter'   => 5,
+        ]);    
+
+        $store->flush();
+
+        $this->assertEmpty($store->all());
+
+        $store->setBucket('life');
+
+        $this->assertNotEmpty($store->all());
+
+        $store->flush();
+
+        $this->assertEmpty($store->all());
+    }
 }

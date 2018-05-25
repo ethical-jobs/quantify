@@ -40,7 +40,7 @@ class Metrics implements Reporter
      * @param string $key
      * @return array
      */
-    public static function start(string $key) : array
+    public function start(string $key) : array
     {
         if ($this->store->has($key)) {
             return $this->store->update($key, [
@@ -62,7 +62,7 @@ class Metrics implements Reporter
      * @param string $key
      * @return array
      */
-    public static function complete(string $key) : array
+    public function complete(string $key) : array
     {
         $metric = $this->store->get($key);
 

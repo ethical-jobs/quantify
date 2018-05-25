@@ -27,11 +27,11 @@ class RedisStore implements Store
     protected static $namespace = 'ej:quantify:';
 
     /**
-     * Store prefix
+     * Store bucket
      * 
      * @var string
      */
-    protected $prefix = '';       
+    protected $bucket = '';       
 
     /**
      * Object constructor
@@ -92,9 +92,38 @@ class RedisStore implements Store
     /**
      * {@inheritdoc}
      */
-    public function setBucket(string $prefix) : Store
+    public function all() : array
     {
-        $this->prefix = static::$namespace . $prefix;
+        $all = [];
+
+        $keys = $this->redis->keys($this->getKey('') . '*');
+
+        foreach ($keys as $key) {
+
+            $all[] = json_decode($this->redis->get($key), true);
+        }
+
+        return empty($all) ? [] : $all;        
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function flush() : void
+    {
+        $keys = $this->redis->keys($this->getKey('') . '*');
+
+        foreach ($keys as $key) {
+            $this->redis->del($key);
+        }        
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setBucket(string $bucket) : Store
+    {
+        $this->bucket = $bucket;
 
         return $this;
     }    
@@ -104,45 +133,8 @@ class RedisStore implements Store
      */
     public function getBucket() : string
     {
-        return $this->prefix;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function all() : array
-    {
-        $rawKeys = $this->redis->keys($this->prefix() . '*');
-
-        foreach ($rawKeys as $rawKey) {
-
-            $withoutPrefix = str_after($rawKey, static::$prefix);
-
-            $setKey = str_before($withoutPrefix, ':');
-
-            $itemKey = str_after($withoutPrefix, ':');
-
-            if ($setKey === $itemKey) {
-                $allKeydData[$setKey] = $this->redis->get($rawKey);
-            } else {
-                $allKeydData[$setKey][$itemKey] = $this->redis->get($rawKey);
-            }
-        }
-
-        return empty($allKeydData) ? [] : $allKeydData;        
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function flush() : void
-    {
-        $keys = $this->redis->keys(static::$prefix . '*');
-
-        foreach ($keys as $key) {
-            $this->redis->del($key);
-        }        
-    }
+        return $this->bucket ?  $this->bucket . ':' : '';
+    }    
 
     /**
      * Returns a key with prefix
@@ -152,6 +144,6 @@ class RedisStore implements Store
      */
     protected function getKey(string $key) : string
     {
-        return $this->getBucket() . $key;
+        return static::$namespace . $this->getBucket() . $key;
     }       
 }

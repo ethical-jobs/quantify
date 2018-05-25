@@ -47,9 +47,11 @@ class Report extends Notification implements ShouldQueue
      */
     public function toSlack($notifiable)
     {
+        $slackConfig = config('quantify.channels.slack');
+
         return (new SlackMessage)
-            ->from('api-alerts', ':email:')
-            ->to('#general')
+            ->from($slackConfig['from'], $slackConfig['icon'])
+            ->to($slackConfig['channel'])
             ->content('Hello world!');
     }
 
