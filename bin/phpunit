@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e
+
+vendor/bin/phpunit $1 $2 $3 $4 $5
