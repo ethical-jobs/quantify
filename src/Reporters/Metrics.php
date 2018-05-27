@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Services\Reporting\Reporters;
+namespace EthicalJobs\Quantify\Reporters;
 
 use Notification;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
+use EthicalJobs\Quantify\Stores\Store;
 
 /**
  * Distributed metrics measuring
@@ -25,7 +26,7 @@ class Metrics implements Reporter
     /**
      * Object constructor
      * 
-     * @param Illuminate\Redis\RedisManager $redis
+     * @param EthicalJobs\Quantify\Stores\Store $redis
      */
     public function __construct(Store $store)
     {
@@ -75,6 +76,8 @@ class Metrics implements Reporter
         $average = $metric['total'] / $metric['count'];
 
         $metric['average'] = $average;
+
+        unset($metric['i']);
 
         return $this->store->set($key, $metric);
     }
