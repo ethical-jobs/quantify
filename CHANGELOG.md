@@ -1,3 +1,7 @@
+# v1.2.2
+
+- Issue with Horizon events
+
 # v1.2.1
 
 - Issue with queue event return statment
