@@ -61,7 +61,7 @@ class RedisStoreTest extends \Tests\TestCase
 
         $keys = Redis::keys('*');
 
-        $key = array_pop($keys);        
+        $key = array_shift($keys);
 
         $this->assertEquals('ej:quantify:my-bucket:bar', $key);
     }

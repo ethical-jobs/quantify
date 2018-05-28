@@ -2,10 +2,6 @@
 
 namespace EthicalJobs\Quantify\Reporters;
 
-use Notification;
-use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Support\Facades\Queue;
 use EthicalJobs\Quantify\Stores\Store;
 
 /**
@@ -21,12 +17,12 @@ class Metrics implements Reporter
      * 
      * @var EthicalJobs\Quantify\Stores\Store
      */
-    protected $store; 
+    protected $store;
 
     /**
      * Object constructor
      * 
-     * @param EthicalJobs\Quantify\Stores\Store $redis
+     * @param EthicalJobs\Quantify\Stores\Store $store
      */
     public function __construct(Store $store)
     {
@@ -51,8 +47,8 @@ class Metrics implements Reporter
 
         return $this->store->set($key, [
             'count'     => 0,
-            'total'     => 0,
-            'average'   => 0,
+            'total-time'     => 0,
+            'average-time'   => 0,
             'i'         => microtime(true),
         ]);            
     }
@@ -69,13 +65,13 @@ class Metrics implements Reporter
 
         $executionTime = (microtime(true) - $metric['i']);
 
-        $metric['total'] += $executionTime;
+        $metric['total-time'] += $executionTime;
 
         $metric['count']++;
 
-        $average = $metric['total'] / $metric['count'];
+        $average = $metric['total-time'] / $metric['count'];
 
-        $metric['average'] = $average;
+        $metric['average-time'] = $average;
 
         unset($metric['i']);
 

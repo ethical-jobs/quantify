@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Services\Reporting;
+namespace EthicalJobs\Quantify;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\SlackMessage;
 
-class Report extends Notification implements ShouldQueue
+class ReportNotice extends Notification implements ShouldQueue
 {
     use Queueable;
 

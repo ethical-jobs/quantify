@@ -1,64 +1,183 @@
 <?php
 
-namespace Tests\Integration\Services;
+namespace Tests\Integration\Reporters;
 
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Notifications\AnonymousNotifiable;
-use App\Services\Reporting\Reporter;
-use App\Services\Reporting\Report;
-use Tests\Fixtures\NullReportingQueueJob;
+use EthicalJobs\Quantify\Reporters\Queues;
+use EthicalJobs\Quantify\ReportNotice;
+use Tests\Fixtures;
 
 class ReporterTest extends \Tests\TestCase
 {
     /**
-     * @test
-     * @group Integration
+     * Post test execution
+     *
+     * @return void
      */
-    public function it_can_measure_a_metric()
+    public function tearDown()
     {
-        Reporter::start('my-operation');
-        sleep(2);
-        Reporter::end('my-operation');
-
-        Reporter::start('my-operation');
-        sleep(1);
-        Reporter::end('my-operation');
-
-        $report = Reporter::report(false);
-
-        $this->assertTrue($report['my-operation']['average'] > 2);
-        $this->assertTrue($report['my-operation']['average'] < 4);
-
-        $this->assertTrue($report['my-operation']['total'] > 2);
-        $this->assertTrue($report['my-operation']['total'] < 4);
-
-        $this->assertTrue(array_has($report['my-operation'], [
-            'average', 'total', 'count'
-        ]));
+        Redis::FLUSHALL();
     }
 
     /**
      * @test
      * @group Integration
      */
-    public function it_can_track_queue_jobs()
+    public function it_has_correct_bucket_name()
+    {
+        $this->assertTrue(
+            Queues::getBucket() === 'queues'
+        );
+    }
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_does_not_send_notifications_before_all_jobs_complete()
     {
         Notification::fake();
 
-        Reporter::track(NullReportingQueueJob::class, 5);
+        $reporter = resolve(Queues::class);
 
-        NullReportingQueueJob::dispatch();
-        NullReportingQueueJob::dispatch();
-        NullReportingQueueJob::dispatch();
-        NullReportingQueueJob::dispatch();
-        NullReportingQueueJob::dispatch();
+        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
 
-        Notification::assertSentTo(
-            new AnonymousNotifiable(),
-            Report::class,
-            function ($notification, $channels) {
-                dd($notification->toArray());
-            }
-        );
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+        // Fixtures\UsleepQueueJob::dispatch();
+
+        Notification::assertNotSentTo(new AnonymousNotifiable(), ReportNotice::class);
     }    
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_sends_notifications_when_all_jobs_complete()
+    {
+        Notification::fake();
+
+        $reporter = resolve(Queues::class);
+
+        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+
+        Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class);
+    }
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_wont_track_unspecified_jobs()
+    {
+        Notification::fake();
+
+        $reporter = resolve(Queues::class);
+
+        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+
+        Fixtures\UsleepQueueJob::dispatch();
+
+        Fixtures\SleepQueueJob::dispatch();
+        Fixtures\SleepQueueJob::dispatch();
+
+        Notification::assertNotSentTo(new AnonymousNotifiable(), ReportNotice::class);
+    }    
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_reports_correct_metrics()
+    {
+        Notification::fake();
+
+        $reporter = resolve(Queues::class);
+
+        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+
+        Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class, function ($notification, $channels, $notifiable) {
+            $report = $notification->toArray();
+            return array_has($report['queues'][0], [
+                'number-of-jobs', 'completed-jobs', 'average-time', 'total-time',
+            ]);
+        });
+    }        
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_reports_on_the_number_of_jobs()
+    {
+        Notification::fake();
+
+        $reporter = resolve(Queues::class);
+
+        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+
+        Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class, function ($notification, $channels, $notifiable) {
+            $report = $notification->toArray();
+            return $report['queues'][0]['number-of-jobs'] === 3 
+                && $report['queues'][0]['completed-jobs'] === 3;
+        });
+    }
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_reports_on_the_average_job_run_time()
+    {
+        Notification::fake();
+
+        $reporter = resolve(Queues::class);
+
+        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+
+        Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class, function ($notification, $channels, $notifiable) {
+            $report = $notification->toArray();
+            return is_float($report['queues'][0]['average-time']);
+        });
+    }
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_reports_on_the_total_job_run_time()
+    {
+        Notification::fake();
+
+        $reporter = resolve(Queues::class);
+
+        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+        Fixtures\UsleepQueueJob::dispatch();
+
+        Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class, function ($notification, $channels, $notifiable) {
+            $report = $notification->toArray();
+            return is_float($report['queues'][0]['total-time']);
+        });
+    }         
 }

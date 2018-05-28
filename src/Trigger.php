@@ -3,6 +3,7 @@
 namespace EthicalJobs\Quantify;
 
 use Notification;
+use EthicalJobs\Quantify\Stores\Store;
 
 /**
  * Triggers a report notice
@@ -13,24 +14,42 @@ use Notification;
 class Trigger
 {
     /**
+     * Store driver
+     * 
+     * @var EthicalJobs\Quantify\Stores\Store
+     */
+    protected $store;
+
+    /**
+     * Object constructor
+     * 
+     * @param EthicalJobs\Quantify\Stores\Store $store
+     * @return void
+     */
+    public function __construct(Store $store)
+    {
+        $this->store = $store;
+    }
+
+    /**
      * Gather and report on buckets
      *
      * @return void
      */
-    public static function notify() : void
+    public function notify() : void
     {
         $reports = [];
 
         $buckets = new Buckets;
 
         foreach ($buckets as $bucket) {
-
-            $this->store->setPrefix($bucket);
+            
+            $this->store->setBucket($bucket);
 
             $reports[$bucket] = $this->store->all();
         }
 
-        static::send($reports);
+        $this->send($reports);
     }
 
     /**
@@ -39,7 +58,7 @@ class Trigger
      * @param array $reports
      * @return void
      */
-    protected static function send(array $reports) : void
+    protected function send(array $reports) : void
     {
         Notification::route('slack', config('quantify.channels.slack'))
             ->notify(new ReportNotice($reports)); 

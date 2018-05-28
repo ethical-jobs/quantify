@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Services\Reporting\Reporters;
+namespace EthicalJobs\Quantify\Reporters;
 
-use Notification;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
+use EthicalJobs\Quantify\Stores\Store;
+use EthicalJobs\Quantify\Trigger;
 
 /**
  * Distributed queue job measuring
@@ -23,22 +24,26 @@ class Queues implements Reporter
     protected $store;
 
     /**
-     * Storage bucket key
+     * Report notice trigger
      * 
-     * @var string
+     * @var EthicalJobs\Quantify\Trigger
      */
-    protected static $bucket = 'queues';
+    protected $trigger;
 
     /**
      * Object constructor
      * 
-     * @param Illuminate\Redis\RedisManager $redis
+     * @param EthicalJobs\Quantify\Stores\Store $store
+     * @param EthicalJobs\Quantify\Trigger $trigger
+     * @return void
      */
-    public function __construct(Store $store)
+    public function __construct(Store $store, Trigger $trigger)
     {
         $this->store = $store;
 
-        $this->store->setPrefix(static::getBucket());
+        $this->store->setBucket(static::getBucket());
+
+        $this->trigger = $trigger;
     }
 
     /**
@@ -48,14 +53,14 @@ class Queues implements Reporter
      * @param int $numberOfJobs
      * @return void
      */
-    public static function track(string $job, int $numberOfJobs) : array
+    public function track(string $job, int $numberOfJobs) : void
     {
         $this->store->set($job, [
-            'numberOfJobs'  => $numberOfJobs,
-            'completed'     => 0,
-            'average'       => 0,
-            'total'         => 0,
-            'i'             => microtime(true),
+            'number-of-jobs'    => $numberOfJobs,
+            'completed-jobs'    => 0,
+            'average-time'      => 0,
+            'total-time'        => 0,
+            'i'                 => microtime(true),
         ]);
 
         Queue::before(function (JobProcessing $event) use ($job) {
@@ -70,11 +75,11 @@ class Queues implements Reporter
     /**
      * Before queue job has finished callback
      *
-     * @param Illuminate\Queue\Events\JobProcessed $event
+     * @param Illuminate\Queue\Events\JobProcessing $event
      * @param string $job
      * @return void
      */
-    protected function beforeQueueJob(JobProcessed $event, string $job) : void
+    protected function beforeQueueJob(JobProcessing $event, string $job) : void
     {
         if ($event->job->resolveName() !== $job) {
             return;
@@ -102,18 +107,20 @@ class Queues implements Reporter
 
         $executionTime = (microtime(true) - $metric['i']);
 
-        $metric['total'] += $executionTime;
+        $metric['total-time'] += $executionTime;
 
-        $metric['completed']++;
+        $metric['completed-jobs']++;
 
-        $average = $metric['total'] / $metric['completed'];
+        $average = $metric['total-time'] / $metric['completed-jobs'];
 
-        $metric['average'] = $average;
+        $metric['average-time'] = $average;
+
+        unset($metric['i']);
 
         $this->store->set($job, $metric);
 
-        if ($metric['completed'] === $metric['numberOfJobs']) {
-            Trigger::notify();
+        if ($metric['completed-jobs'] === $metric['number-of-jobs']) {
+            $this->trigger->notify();
         }        
     }
 

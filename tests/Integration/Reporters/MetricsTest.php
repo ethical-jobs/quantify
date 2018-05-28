@@ -59,7 +59,7 @@ class MetricsTest extends \Tests\TestCase
     	$reporter->complete('my-operation');
 
     	$this->assertTrue(array_has($reporter->report()[0], [
-    		'count', 'total', 'average',
+    		'count', 'total-time', 'average-time',
     	]));
     }       
 
@@ -85,7 +85,7 @@ class MetricsTest extends \Tests\TestCase
 
     	$report = $reporter->report();
 
-    	$average = $report[0]['average'];
+    	$average = $report[0]['average-time'];
 
     	$this->assertTrue(
     		$average > 0.033 && $average < 0.037
@@ -111,7 +111,7 @@ class MetricsTest extends \Tests\TestCase
 
     	$report = $reporter->report();
 
-    	$total = $report[0]['total'];
+    	$total = $report[0]['total-time'];
 
     	$this->assertTrue(
     		(int) $total === 2
