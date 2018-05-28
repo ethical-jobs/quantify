@@ -64,11 +64,11 @@ class Queues implements Reporter
         ]);
 
         Queue::before(function (JobProcessing $event) use ($job) {
-            return $this->beforeQueueJob($event, $job);
+            $this->beforeQueueJob($event, $job);
         });
 
         Queue::after(function (JobProcessed $event) use ($job) {
-            return $this->afterQueueJob($event, $job);
+            $this->afterQueueJob($event, $job);
         });
     }
 

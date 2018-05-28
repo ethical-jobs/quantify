@@ -59,9 +59,9 @@ class ReporterTest extends \Tests\TestCase
     {
         Notification::fake();
 
-        $reporter = resolve(Queues::class);
+        $queueReporter = resolve(Queues::class);
 
-        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+        $queueReporter->track(Fixtures\UsleepQueueJob::class, 3);
 
         Fixtures\UsleepQueueJob::dispatch();
         Fixtures\UsleepQueueJob::dispatch();
