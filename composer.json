@@ -40,5 +40,16 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EthicalJobs\\Quantify\\ServiceProvider"
+            ],
+            "aliases": {
+                "Metrics": "EthicalJobs\\Quantify\\Facades\\Metrics",
+                "Queues": "EthicalJobs\\Quantify\\Facades\\Queues"
+            }
+        }
+    }
 }
