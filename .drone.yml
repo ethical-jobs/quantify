@@ -3,6 +3,7 @@ pipeline:
   install:
     image: composer
     commands: [ 
+      'composer global require hirak/prestissimo',
       'composer install --prefer-dist' 
     ]
 
@@ -29,3 +30,4 @@ pipeline:
 services:
   redis:
     image: redis       
+

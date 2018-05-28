@@ -1,3 +1,7 @@
+# v1.2.0
+
+- Adding report to notifications
+
 # v1.1.1
 
 - Addressing slack channel config issue
