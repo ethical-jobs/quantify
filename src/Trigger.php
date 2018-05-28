@@ -60,7 +60,9 @@ class Trigger
      */
     protected function send(array $reports) : void
     {
-        Notification::route('slack', config('quantify.channels.slack'))
+        $slackConfig = config('quantify.channels.slack');
+
+        Notification::route('slack', $slackConfig['hook'])        
             ->notify(new ReportNotice($reports)); 
     }   
 }
