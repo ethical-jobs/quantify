@@ -11,7 +11,6 @@ pipeline:
     environment:
       - REDIS_HOST=redis
     commands: [
-      'sleep 15',
       'bin/phpunit'
     ]    
 
