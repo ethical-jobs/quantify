@@ -1,3 +1,7 @@
+# v1.2.1
+
+- Issue with queue event return statment
+
 # v1.2.0
 
 - Adding report to notifications
