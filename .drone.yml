@@ -1,9 +1,20 @@
 pipeline:
 
-  test:
-    image: ethicaljobs/aphex:7.2.x
+  install:
+    image: composer
     pull: true
-    commands: [ 'composer install --prefer-dist', './vendor/bin/phpunit' ]
+    commands: [ 
+      'composer install --prefer-dist' 
+    ]
+
+  test:
+    image: php:7.2-fpm
+    environment:
+      - REDIS_HOST=redis
+    commands: [
+      'sleep 15',
+      'bin/phpunit'
+    ]    
 
   publish:
     image: byrnedo/alpine-curl
@@ -16,3 +27,7 @@ pipeline:
     image: plugins/slack
     webhook: https://hooks.slack.com/services/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
     channel: deployments
+
+services:
+  redis:
+    image: redis       
