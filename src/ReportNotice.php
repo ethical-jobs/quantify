@@ -49,10 +49,12 @@ class ReportNotice extends Notification implements ShouldQueue
     {
         $slackConfig = config('quantify.channels.slack');
 
+        $content = '```'.json_encode($this->toArray(), JSON_PRETTY_PRINT).'```';
+
         return (new SlackMessage)
             ->from($slackConfig['from'], $slackConfig['icon'])
             ->to($slackConfig['channel'])
-            ->content('Hello world!');
+            ->content($content);
     }
 
     /**
