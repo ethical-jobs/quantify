@@ -1,3 +1,7 @@
+# v1.1.1
+
+- Addressing slack channel config issue
+
 # v1.1.0
 
 - Adding reporter facades
