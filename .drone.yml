@@ -2,7 +2,6 @@ pipeline:
 
   install:
     image: composer
-    pull: true
     commands: [ 
       'composer install --prefer-dist' 
     ]
