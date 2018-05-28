@@ -2,9 +2,10 @@
 
 namespace EthicalJobs\Quantify\Reporters;
 
-use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Support\Facades\Queue;
+use Laravel\Horizon\Events\JobReserved;
+use Laravel\Horizon\Events\JobReleased;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use EthicalJobs\Quantify\Stores\Store;
 use EthicalJobs\Quantify\Trigger;
 
@@ -56,18 +57,18 @@ class Queues implements Reporter
     public function track(string $job, int $numberOfJobs) : void
     {
         $this->store->set($job, [
-            'number-of-jobs'    => $numberOfJobs,
-            'completed-jobs'    => 0,
-            'average-time'      => 0,
-            'total-time'        => 0,
-            'i'                 => microtime(true),
+            'number-of-jobs' => $numberOfJobs,
+            'completed-jobs' => 0,
+            'average-time' => 0,
+            'total-time' => 0,
+            'i' => microtime(true),
         ]);
 
-        Queue::before(function (JobProcessing $event) use ($job) {
+        Event::listen(JobReserved::class, function ($event) use ($job) {
             $this->beforeQueueJob($event, $job);
         });
 
-        Queue::after(function (JobProcessed $event) use ($job) {
+        Event::listen(JobReleased::class, function ($event) use ($job) {
             $this->afterQueueJob($event, $job);
         });
     }
@@ -75,11 +76,11 @@ class Queues implements Reporter
     /**
      * Before queue job has finished callback
      *
-     * @param Illuminate\Queue\Events\JobProcessing $event
+     * @param mixed $event
      * @param string $job
      * @return void
      */
-    protected function beforeQueueJob(JobProcessing $event, string $job) : void
+    protected function beforeQueueJob($event, string $job) : void
     {
         if ($event->job->resolveName() !== $job) {
             return;
@@ -87,17 +88,17 @@ class Queues implements Reporter
 
         $this->store->update($job, [
             'i' => microtime(true),
-        ]);        
+        ]);
     }
 
     /**
      * After queue job has finished callback
      *
-     * @param Illuminate\Queue\Events\JobProcessed $event
+     * @param mixed $event
      * @param string $job
      * @return void
      */
-    protected function afterQueueJob(JobProcessed $event, string $job) : void
+    protected function afterQueueJob($event, string $job) : void
     {
         if ($event->job->resolveName() !== $job) {
             return;
@@ -121,7 +122,7 @@ class Queues implements Reporter
 
         if ($metric['completed-jobs'] === $metric['number-of-jobs']) {
             $this->trigger->notify();
-        }        
+        }
     }
 
     /**
@@ -138,5 +139,5 @@ class Queues implements Reporter
     public static function getBucket() : string
     {
         return 'queues';
-    }          
+    }
 }
