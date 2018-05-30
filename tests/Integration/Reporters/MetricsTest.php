@@ -59,7 +59,7 @@ class MetricsTest extends \Tests\TestCase
     	$reporter->complete('my-operation');
 
     	$this->assertTrue(array_has($reporter->report()[0], [
-    		'count', 'total-time', 'average-time',
+    		'metric', 'count', 'total-time', 'average-time',
     	]));
     }       
 

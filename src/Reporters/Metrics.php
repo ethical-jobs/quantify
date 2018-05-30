@@ -46,10 +46,11 @@ class Metrics implements Reporter
         }
 
         return $this->store->set($key, [
-            'count'     => 0,
-            'total-time'     => 0,
-            'average-time'   => 0,
-            'i'         => microtime(true),
+            'metric' => $key,
+            'count' => 0,
+            'total-time' => 0,
+            'average-time' => 0,
+            'i' => microtime(true),
         ]);            
     }
 

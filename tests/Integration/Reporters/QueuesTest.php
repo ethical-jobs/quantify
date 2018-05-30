@@ -125,7 +125,7 @@ class ReporterTest extends \Tests\TestCase
         Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class, function ($notification, $channels, $notifiable) {
             $report = $notification->toArray();
             return array_has($report['queues'][0], [
-                'number-of-jobs', 'completed-jobs', 'average-time', 'total-time',
+                'job', 'number-of-jobs', 'completed-jobs', 'failed-jobs', 'average-time', 'total-time',
             ]);
         });
     }        
@@ -173,27 +173,5 @@ class ReporterTest extends \Tests\TestCase
             $report = $notification->toArray();
             return is_float($report['queues'][0]['average-time']);
         });
-    }
-
-    /**
-     * @test
-     * @group Integration
-     */
-    public function it_reports_on_the_total_job_run_time()
-    {
-        Notification::fake();
-
-        $reporter = resolve(Queues::class);
-
-        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
-
-        Fixtures\UsleepQueueJob::dispatch();
-        Fixtures\UsleepQueueJob::dispatch();
-        Fixtures\UsleepQueueJob::dispatch();
-
-        Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class, function ($notification, $channels, $notifiable) {
-            $report = $notification->toArray();
-            return is_float($report['queues'][0]['total-time']);
-        });
-    }         
+    }     
 }

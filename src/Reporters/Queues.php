@@ -113,11 +113,17 @@ class Queues implements Reporter
 
         $metric = $this->store->get($job);
 
-        if (get_class($event) === Queue\Events\JobProcessed::class) {
-            $metric['completed-jobs']++;
-        } else if (get_class($event) === Queue\Events\JobFailed::class) {
-            $metric['failed-jobs']++;
-        }        
+        switch (get_class($event)) {
+            case Queue\Events\JobProcessed::class:
+                $metric['completed-jobs']++;
+                break;
+            case Queue\Events\JobFailed::class:
+                $metric['failed-jobs']++;
+                break;
+            case Queue\Events\JobExceptionOccurred::class:
+                $metric['failed-jobs']++;
+                break;                                  
+        }   
 
         $processedJobs = $metric['completed-jobs'] + $metric['failed-jobs'];
 

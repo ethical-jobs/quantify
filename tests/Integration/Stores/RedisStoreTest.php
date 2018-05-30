@@ -62,6 +62,10 @@ class RedisStoreTest extends \Tests\TestCase
      */
     public function it_prefixes_its_storage_keys_with()
     {
+        $redis = resolve(RedisManager::class);
+
+        $store = new RedisStore($redis);
+                
         $store->setBucket('my-bucket');
 
         $store->set('bar', ['bar' => 1]);
