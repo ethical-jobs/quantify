@@ -41,7 +41,7 @@ class RedisStoreTest extends \Tests\TestCase
      * @test
      * @group Integration
      */
-    public function it_prefixes_its_storage_keys()
+    public function it_prefixes_its_storage_keys_without()
     {
         $redis = resolve(RedisManager::class);
 
@@ -54,7 +54,14 @@ class RedisStoreTest extends \Tests\TestCase
         $key = array_shift($keys);
 
         $this->assertEquals('ej:quantify:foo', $key);
+    }
 
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_prefixes_its_storage_keys_with()
+    {
         $store->setBucket('my-bucket');
 
         $store->set('bar', ['bar' => 1]);
@@ -64,7 +71,7 @@ class RedisStoreTest extends \Tests\TestCase
         $key = array_shift($keys);
 
         $this->assertEquals('ej:quantify:my-bucket:bar', $key);
-    }
+    }    
 
     /**
      * @test
