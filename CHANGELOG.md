@@ -1,3 +1,7 @@
+# v1.2.5
+
+- Adding more metric details and tests:
+
 # v1.2.4
 
 - Purging uneeded keys
