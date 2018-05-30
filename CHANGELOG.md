@@ -1,3 +1,7 @@
+# v1.2.4
+
+- Purging uneeded keys
+
 # v1.2.3
 
 - Resolved logic error in tracking queue jobs

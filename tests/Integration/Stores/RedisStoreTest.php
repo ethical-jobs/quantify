@@ -155,18 +155,16 @@ class RedisStoreTest extends \Tests\TestCase
 
         $store->setBucket('life');
 
-        $this->assertArraySubset($store->all(), [
-            [
-                'whales'    => 14,
-                'dogs'      => 292,
-                'mice'      => 2212,
-            ],              
-            [
-                'seagulls'  => 22,
-                'magpies'   => 11,
-                'peewee'    => 13,
-            ],                             
-        ]);        
+        $this->assertArraySubset($store->all()[0], [
+                'seagulls' => 22,
+                'magpies' => 11,
+                'peewee' => 13,
+        ]);
+        $this->assertArraySubset($store->all()[1], [
+            'whales' => 14,
+            'dogs' => 292,
+            'mice' => 2212,
+        ]);
     }    
 
     /**

@@ -125,8 +125,6 @@ class Queues implements Reporter
 
         $metric['average-time'] = $metric['total-time'] / ($processedJobs);
 
-        unset($metric['i']);
-
         $this->store->set($job, $metric);        
 
         if ($processedJobs === $metric['number-of-jobs']) {

@@ -49,7 +49,7 @@ class Trigger
             $reports[$bucket] = $this->store->all();
         }
 
-        $this->send($reports);
+        $this->send(Arr::purgeKeys('i', $reports));
     }
 
     /**

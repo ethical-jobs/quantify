@@ -73,8 +73,6 @@ class Metrics implements Reporter
 
         $metric['average-time'] = $average;
 
-        unset($metric['i']);
-
         return $this->store->set($key, $metric);
     }
 
