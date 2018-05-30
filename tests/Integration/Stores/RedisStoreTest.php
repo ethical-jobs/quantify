@@ -157,15 +157,15 @@ class RedisStoreTest extends \Tests\TestCase
 
         $this->assertArraySubset($store->all(), [
             [
-                'seagulls'  => 22,
-                'magpies'   => 11,
-                'peewee'    => 13,
-            ],              
-            [
                 'whales'    => 14,
                 'dogs'      => 292,
                 'mice'      => 2212,
-            ],                 
+            ],              
+            [
+                'seagulls'  => 22,
+                'magpies'   => 11,
+                'peewee'    => 13,
+            ],                             
         ]);        
     }    
 
@@ -176,6 +176,8 @@ class RedisStoreTest extends \Tests\TestCase
     public function it_can_remove_all_keys()
     {
         $redis = resolve(RedisManager::class);
+
+        $redis->set('dont:delete', 1983);
 
         $store = new RedisStore($redis);
 
@@ -212,5 +214,7 @@ class RedisStoreTest extends \Tests\TestCase
         $store->flush();
 
         $this->assertEmpty($store->all());
+
+        $this->assertEquals(1983, $redis->get('dont:delete'));
     }
 }

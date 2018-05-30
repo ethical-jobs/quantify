@@ -2,10 +2,7 @@
 
 namespace EthicalJobs\Quantify\Reporters;
 
-use Laravel\Horizon\Events\JobReserved;
-use Laravel\Horizon\Events\JobReleased;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Queue;
 use EthicalJobs\Quantify\Stores\Store;
 use EthicalJobs\Quantify\Trigger;
 
@@ -57,32 +54,41 @@ class Queues implements Reporter
     public function track(string $job, int $numberOfJobs) : void
     {
         $this->store->set($job, [
+            'job' => $job,
             'number-of-jobs' => $numberOfJobs,
             'completed-jobs' => 0,
+            'failed-jobs' => 0,
             'average-time' => 0,
             'total-time' => 0,
             'i' => microtime(true),
         ]);
-
-        Event::listen(JobReserved::class, function ($event) use ($job) {
-            $this->beforeQueueJob($event, $job);
-        });
-
-        Event::listen(JobReleased::class, function ($event) use ($job) {
-            $this->afterQueueJob($event, $job);
-        });
     }
 
     /**
-     * Before queue job has finished callback
+     * Is a queue job being tracked
      *
-     * @param mixed $event
-     * @param string $job
+     * @return bool
+     */
+    public function isJobTracked(string $job) : bool
+    {
+        $report = collect($this->report());
+
+        $tracked = $report->pluck('job');
+
+        return $tracked->contains($job);
+    }    
+
+    /**
+     * Before queue jobs are finished callback
+     *
+     * @param Illuminate\Queue\Events\JobProcessing $event
      * @return void
      */
-    protected function beforeQueueJob($event, string $job) : void
+    public function startQueueJob(Queue\Events\JobProcessing $event) : void
     {
-        if ($event->job->resolveName() !== $job) {
+        $job = $event->job->resolveName();
+        
+        if ($this->isJobTracked($job) === false) {
             return;
         }
 
@@ -92,38 +98,41 @@ class Queues implements Reporter
     }
 
     /**
-     * After queue job has finished callback
+     * Completed / Failed queue jobs callback
      *
      * @param mixed $event
-     * @param string $job
      * @return void
      */
-    protected function afterQueueJob($event, string $job) : void
+    public function completeQueueJob($event) : void
     {
-        if ($event->job->resolveName() !== $job) {
+        $job = $event->job->resolveName();
+
+        if ($this->isJobTracked($job) === false) {
             return;
         }
 
         $metric = $this->store->get($job);
 
-        $executionTime = (microtime(true) - $metric['i']);
+        if (get_class($event) === Queue\Events\JobProcessed::class) {
+            $metric['completed-jobs']++;
+        } else if (get_class($event) === Queue\Events\JobFailed::class) {
+            $metric['failed-jobs']++;
+        }        
 
-        $metric['total-time'] += $executionTime;
+        $processedJobs = $metric['completed-jobs'] + $metric['failed-jobs'];
 
-        $metric['completed-jobs']++;
+        $metric['total-time'] += (microtime(true) - $metric['i']);
 
-        $average = $metric['total-time'] / $metric['completed-jobs'];
-
-        $metric['average-time'] = $average;
+        $metric['average-time'] = $metric['total-time'] / ($processedJobs);
 
         unset($metric['i']);
 
-        $this->store->set($job, $metric);
+        $this->store->set($job, $metric);        
 
-        if ($metric['completed-jobs'] === $metric['number-of-jobs']) {
+        if ($processedJobs === $metric['number-of-jobs']) {
             $this->trigger->notify();
         }
-    }
+    } 
 
     /**
      * {@inheritdoc}

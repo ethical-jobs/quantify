@@ -4,6 +4,7 @@ namespace Tests\Integration\Reporters;
 
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Notifications\AnonymousNotifiable;
 use EthicalJobs\Quantify\Reporters\Queues;
 use EthicalJobs\Quantify\ReportNotice;
@@ -42,11 +43,11 @@ class ReporterTest extends \Tests\TestCase
 
         $reporter = resolve(Queues::class);
 
-        $reporter->track(Fixtures\UsleepQueueJob::class, 3);
+        $reporter->track(Fixtures\UsleepQueueJob::class, 40);
 
-        Fixtures\UsleepQueueJob::dispatch();
-        Fixtures\UsleepQueueJob::dispatch();
-        // Fixtures\UsleepQueueJob::dispatch();
+        for ($i = 0; $i < 31; $i++) {
+            Fixtures\UsleepQueueJob::dispatch();
+        }
 
         Notification::assertNotSentTo(new AnonymousNotifiable(), ReportNotice::class);
     }    
@@ -61,11 +62,11 @@ class ReporterTest extends \Tests\TestCase
 
         $queueReporter = resolve(Queues::class);
 
-        $queueReporter->track(Fixtures\UsleepQueueJob::class, 3);
+        $queueReporter->track(Fixtures\UsleepQueueJob::class, 30);
 
-        Fixtures\UsleepQueueJob::dispatch();
-        Fixtures\UsleepQueueJob::dispatch();
-        Fixtures\UsleepQueueJob::dispatch();
+        for ($i = 0; $i < 31; $i++) {
+            Fixtures\UsleepQueueJob::dispatch();
+        }
 
         Notification::assertSentTo(new AnonymousNotifiable(), ReportNotice::class);
     }
@@ -88,6 +89,21 @@ class ReporterTest extends \Tests\TestCase
         Fixtures\SleepQueueJob::dispatch();
 
         Notification::assertNotSentTo(new AnonymousNotifiable(), ReportNotice::class);
+    }
+
+    /**
+     * @test
+     * @group Integration
+     */
+    public function it_knows_if_a_job_is_bing_tracked()
+    {
+        $queueReporter = resolve(Queues::class);
+
+        $queueReporter->track(Fixtures\UsleepQueueJob::class, 5);
+
+        $this->assertTrue($queueReporter->isJobTracked(Fixtures\UsleepQueueJob::class));
+
+        $this->assertFalse($queueReporter->isJobTracked(Fixtures\SleepQueueJob::class));
     }    
 
     /**

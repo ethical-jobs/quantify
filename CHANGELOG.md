@@ -1,3 +1,7 @@
+# v1.2.3
+
+- Resolved logic error in tracking queue jobs
+
 # v1.2.2
 
 - Issue with Horizon events
