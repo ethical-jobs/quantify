@@ -60,7 +60,7 @@ class NullStore implements Store
      */
     public function has(string $key) : bool
     {
-        false;
+        return false;
     }
 
     /**

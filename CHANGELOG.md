@@ -1,6 +1,10 @@
+# v1.3.1
+
+- Tests for NullStore
+
 # v1.3.0
 
-- Ability to disable in testing environments=
+- Ability to disable in testing environments
 
 # v1.2.5
 
