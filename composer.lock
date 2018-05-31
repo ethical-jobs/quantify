@@ -1,10 +1,10 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc67d40260175821776d1b1370066634",
+    "content-hash": "49708639a76146d53b4a397e008c8fca",
     "packages": [
         {
             "name": "ethical-jobs/laravel-storage",
@@ -240,6 +240,45 @@
                 "url"
             ],
             "time": "2017-03-20T17:10:46+00:00"
+        },
+        {
+            "name": "pgooch/php-ascii-tables",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pgooch/PHP-Ascii-Tables.git",
+                "reference": "37ec3a2bf1820cf467be629003bd3c86c7af3458"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pgooch/PHP-Ascii-Tables/zipball/37ec3a2bf1820cf467be629003bd3c86c7af3458",
+                "reference": "37ec3a2bf1820cf467be629003bd3c86c7af3458",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.0.0"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPLv3"
+            ],
+            "authors": [
+                {
+                    "name": "Phillip Gooch",
+                    "email": "phillip.gooch@gmail.com",
+                    "homepage": "http://phillipgooch.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Convert multi-dimensional arrays into ASCII Tabled, and vise-versa.",
+            "homepage": "https://github.com/pgooch/PHP-Ascii-Tables",
+            "keywords": [
+                "ascii",
+                "cli",
+                "tables"
+            ],
+            "time": "2016-09-24T21:26:06+00:00"
         },
         {
             "name": "predis/predis",

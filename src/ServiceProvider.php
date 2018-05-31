@@ -27,7 +27,29 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
      *
      * @var string
      */
-    protected $configPath = __DIR__.'/../config/quantify.php';  
+    protected $configPath = __DIR__.'/../config/quantify.php';
+
+    /**
+     * Is quantify enabled
+     *
+     * @var string
+     */
+    protected $enabled = true;
+
+    /**
+     * Create a new service provider instance.
+     *
+     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @return void
+     */
+    public function __construct($app)
+    {
+        parent::__construct($app);
+
+        if ($this->app->runningUnitTests() && config('quantify.testing-disabled')) {
+            $this->enabled = false;
+        }
+    }    
 
     /**
      * Perform post-registration booting of services.
@@ -40,7 +62,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             $this->configPath => config_path('quantify.php')
         ], 'config');
 
-        $this->listenToQueue();
+        if ($this->enabled) {
+            $this->listenToQueue();
+        }
     }
 
     /**
@@ -50,17 +74,21 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
      */
     public function register() : void
     {
-        $this->mergeConfigFrom($this->configPath, 'quantify');        
+        $this->mergeConfigFrom($this->configPath, 'quantify');
 
-        $this->registerStores();
+        if ($this->enabled) {
+            $this->bindRedisStore();
+        } else {
+            $this->bindNullStore();
+        }
     }
 
     /**
-     * Register mertic stores
+     * Register redis store
      * 
      * @return void
      */
-    public function registerStores() : void
+    public function bindRedisStore() : void
     {
         $this->app->bind(Stores\Store::class, function ($app) {
 
@@ -69,6 +97,18 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             return new Stores\RedisStore($redis);
         });
     }
+
+    /**
+     * Register null store
+     * 
+     * @return void
+     */
+    public function bindNullStore() : void
+    {
+        $this->app->bind(Stores\Store::class, function ($app) {
+            return new Stores\NullStore;
+        });
+    }    
 
     /**
      * Setup queue event listeners
@@ -91,6 +131,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             $queueReporter = resolve(Reporters\Queues::class);
             $queueReporter->completeQueueJob($event);
         });
+
+        Event::listen(Queue\Events\JobExceptionOccurred::class, function ($event) {
+            $queueReporter = resolve(Reporters\Queues::class);
+            $queueReporter->completeQueueJob($event);
+        });        
     }    
 
     /**
