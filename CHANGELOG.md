@@ -1,3 +1,7 @@
+# v1.3.0
+
+- Ability to disable in testing environments
+
 # v1.2.4
 
 - Purging uneeded keys
