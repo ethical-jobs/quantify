@@ -29,7 +29,7 @@ class TestingSwitchTest extends \Tests\TestCase
     {
         $store = resolve(Stores\Store::class);
 
-        $this->assertInstanceOf(Stores\NullStore::class, $store);
+        $this->assertInstanceOf(Stores\SyncStore::class, $store);
     }
 
     /**

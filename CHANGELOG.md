@@ -1,10 +1,8 @@
-# v1.3.1
-
-- Tests for NullStore
-
-# v1.3.0
+# v1.3.2
 
 - Ability to disable in testing environments
+- SyncStore storage medium
+- Extended tests
 
 # v1.2.5
 

@@ -27,7 +27,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
      *
      * @var string
      */
-    protected $configPath = __DIR__.'/../config/quantify.php';
+    protected $configPath = __DIR__ . '/../config/quantify.php';
 
     /**
      * Is quantify enabled
@@ -49,7 +49,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         if ($this->app->runningUnitTests() && config('quantify.testing-disabled')) {
             $this->enabled = false;
         }
-    }    
+    }
 
     /**
      * Perform post-registration booting of services.
@@ -79,7 +79,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         if ($this->enabled) {
             $this->bindRedisStore();
         } else {
-            $this->bindNullStore();
+            $this->bindSyncStore();
         }
     }
 
@@ -99,16 +99,16 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     }
 
     /**
-     * Register null store
+     * Register sync store
      * 
      * @return void
      */
-    public function bindNullStore() : void
+    public function bindSyncStore() : void
     {
         $this->app->bind(Stores\Store::class, function ($app) {
-            return new Stores\NullStore;
+            return new Stores\SyncStore;
         });
-    }    
+    }
 
     /**
      * Setup queue event listeners
@@ -135,8 +135,8 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         Event::listen(Queue\Events\JobExceptionOccurred::class, function ($event) {
             $queueReporter = resolve(Reporters\Queues::class);
             $queueReporter->completeQueueJob($event);
-        });        
-    }    
+        });
+    }
 
     /**
      * Get the services provided by the provider.
@@ -148,5 +148,5 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         return [
             Stores\Store::class,
         ];
-    }            
+    }
 }

@@ -59,11 +59,11 @@ interface Store
     public function flush() : void;    
 
     /**
-     * Returns key prefix
+     * Returns current bucket
      *
-     * @return string
+     * @return mixed
      */
-    public function getBucket() : string;
+    public function getBucket();
 
     /**
      * Sets prefix key

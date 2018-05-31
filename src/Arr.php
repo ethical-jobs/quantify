@@ -21,7 +21,9 @@ class Arr
             if (is_array($value)) {
                 $subject[$key] = static::purgeKeys($needle, $value);
             } else if ($key === $needle) {
-                unset($subject[$needle]);
+                if (isset($subject[$needle])) {
+                    unset($subject[$needle]);
+                }
             }
         }
 
