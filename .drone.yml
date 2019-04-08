@@ -1,26 +1,18 @@
 pipeline:
 
   install:
-    image: composer
+    image: composer-prestissimo
     commands: [ 
-      'composer global require hirak/prestissimo',
       'composer install --prefer-dist' 
     ]
 
   test:
-    image: php:7.2-fpm
+    image: php:7.3-fpm
     environment:
       - REDIS_HOST=redis
     commands: [
       'bin/phpunit'
     ]    
-
-  publish:
-    image: byrnedo/alpine-curl
-    commands: [ 'curl -XPOST -H"content-type:application/json" "https://packagist.org/api/update-package?username=andrewmclagan&apiToken=2cmy6xog4hs0kogk4ccg" -d''{"repository":{"url":"https://github.com/ethical-jobs/quantify"}}''' ]
-    when:
-      status: success
-      event: tag
 
   notify-slack:
     image: plugins/slack
