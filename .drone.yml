@@ -1,7 +1,7 @@
 pipeline:
 
   install:
-    image: composer-prestissimo
+    image: ethicaljobs/composer-prestissimo
     commands: [ 
       'composer install --prefer-dist' 
     ]
